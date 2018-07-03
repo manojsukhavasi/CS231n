@@ -22,6 +22,9 @@ def softmax_loss_naive(W, X, y, reg):
   # Initialize the loss and gradient to zero.
   loss = 0.0
   dW = np.zeros_like(W)
+  batch_size = X.shape[0]
+  classes = W.shape[1]
+  inp_dim = X.shape[1]
 
   #############################################################################
   # TODO: Compute the softmax loss and its gradient using explicit loops.     #
@@ -29,7 +32,19 @@ def softmax_loss_naive(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  scores = X.dot(W)
+  exp_scores = np.exp(scores-np.expand_dims(np.max(scores, axis=1), axis=1))
+  prob = exp_scores/np.expand_dims(np.sum(exp_scores, axis=1), axis=1)
+  loss = np.sum(-np.log(prob[range(batch_size), y]))/batch_size
+
+  loss += 0.5 * reg * np.sum(W*W)
+
+  dScores = prob
+  dScores[range(batch_size), y] += -1
+  dScores /= batch_size
+
+  dW = np.dot(X.T, dScores)
+  dW += reg * W
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
@@ -46,6 +61,9 @@ def softmax_loss_vectorized(W, X, y, reg):
   # Initialize the loss and gradient to zero.
   loss = 0.0
   dW = np.zeros_like(W)
+  batch_size = X.shape[0]
+  classes = W.shape[1]
+  inp_dim = X.shape[1]
 
   #############################################################################
   # TODO: Compute the softmax loss and its gradient using no explicit loops.  #
@@ -53,7 +71,19 @@ def softmax_loss_vectorized(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  scores = X.dot(W)
+  exp_scores = np.exp(scores-np.expand_dims(np.max(scores, axis=1), axis=1))
+  prob = exp_scores/np.expand_dims(np.sum(exp_scores, axis=1), axis=1)
+  loss = np.sum(-np.log(prob[range(batch_size), y]))/batch_size
+
+  loss += 0.5 * reg * np.sum(W*W)
+
+  dScores = prob
+  dScores[range(batch_size), y] += -1
+  dScores /= batch_size
+
+  dW = np.dot(X.T, dScores)
+  dW += reg * W
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
