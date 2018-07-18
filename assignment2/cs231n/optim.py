@@ -101,7 +101,7 @@ def rmsprop(w, dw, config=None):
     # config['cache'].                                                        #
     ###########################################################################
     cache = config['decay_rate'] * config['cache'] + (1-config['decay_rate'])*(dw*dw)
-    next_w = w - config['learning_rate']*(dw/(np.sqrt(cache) + config['epsilon']))
+    next_w = w - config['learning_rate']*(dw/np.sqrt(cache+ config['epsilon']))
     config['cache'] = cache
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -147,7 +147,7 @@ def adam(w, dw, config=None):
     mt = m/(1- config['beta1']**t)
     v = config['v']*config['beta2'] + (dw*dw)*(1-config['beta2'])
     vt = v/(1- config['beta2']**t)
-    next_w = w - config['learning_rate']*(mt/(np.sqrt(vt) + config['epsilon']))
+    next_w = w - config['learning_rate']*(mt/np.sqrt(vt+ config['epsilon']))
     config['v'] = v
     config['m'] = m
     config['t'] = t

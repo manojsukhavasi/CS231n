@@ -201,9 +201,15 @@ class FullyConnectedNet(object):
         ############################################################################
         self.params['W1'] = np.random.normal(scale=weight_scale, size=(input_dim, hidden_dims[0]))
         self.params['b1'] = np.zeros(hidden_dims[0])
+        if self.normalization=='batchnorm':
+            self.params[f'gamma1'] = np.ones(hidden_dims[0])
+            self.params[f'beta1'] = np.zeros(hidden_dims[0])
         for l in range(2,self.num_layers):
             self.params['W' + str(l)] = np.random.normal(scale=weight_scale, size=(hidden_dims[l-2], hidden_dims[l-1]))
             self.params['b' + str(l)] = np.zeros(hidden_dims[l-1])
+            if self.normalization=='batchnorm':
+                self.params[f'gamma{l}'] = np.ones(hidden_dims[l-1])
+                self.params[f'beta{l}'] = np.zeros(hidden_dims[l-1])
         
         self.params['W' + str(self.num_layers)] = np.random.normal(scale=weight_scale, size=(hidden_dims[-1], num_classes))
         self.params['b' + str(self.num_layers)] = np.zeros(num_classes)
@@ -281,14 +287,19 @@ class FullyConnectedNet(object):
         inputi = X
         fc_cache=[]
         relu_cache=[]
+        bn_cache = []
         for l in range(1,self.num_layers+1):
             Wi, bi = self.params[f'W{l}'], self.params[f'b{l}']
             outi, fccachei = affine_forward(inputi, Wi, bi)
             fc_cache.append(fccachei)
-
+            
             if(l==self.num_layers): 
                 inputi = outi
                 break
+
+            if self.normalization=='batchnorm':
+                outi, bn_cachei = batchnorm_forward(outi, self.params[f'gamma{l}'], self.params[f'beta{l}'], self.bn_params[l-1])
+                bn_cache.append(bn_cachei)
 
             outi, relucachei = relu_forward(outi)
             relu_cache.append(relucachei)
@@ -335,6 +346,8 @@ class FullyConnectedNet(object):
 
             if (l!=self.num_layers):
                 dout = relu_backward(dout, relu_cache[l-1])
+                if self.normalization=='batchnorm':
+                    dout, grads[f'gamma{l}'], grads[f'beta{l}'] = batchnorm_backward_alt(dout, bn_cache[l-1])
 
             dxi, dWi, dbi = affine_backward(dout, fc_cache[l-1])
             dWi += self.reg * self.params[f'W{l}']
