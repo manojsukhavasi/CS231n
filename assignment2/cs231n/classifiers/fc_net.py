@@ -288,6 +288,7 @@ class FullyConnectedNet(object):
         fc_cache=[]
         relu_cache=[]
         bn_cache = []
+        dropout_cache = []
         for l in range(1,self.num_layers+1):
             Wi, bi = self.params[f'W{l}'], self.params[f'b{l}']
             outi, fccachei = affine_forward(inputi, Wi, bi)
@@ -303,6 +304,10 @@ class FullyConnectedNet(object):
 
             outi, relucachei = relu_forward(outi)
             relu_cache.append(relucachei)
+
+            if self.use_dropout==True:
+                outi, dropout_cachei = dropout_forward(outi, self.dropout_param)
+                dropout_cache.append(dropout_cachei)
 
             inputi = outi
 
@@ -345,7 +350,12 @@ class FullyConnectedNet(object):
         for l in reversed(range(1, self.num_layers+1)):
 
             if (l!=self.num_layers):
+
+                if self.use_dropout==True:
+                    dout = dropout_backward(dout, dropout_cache[l-1])
+
                 dout = relu_backward(dout, relu_cache[l-1])
+                
                 if self.normalization=='batchnorm':
                     dout, grads[f'gamma{l}'], grads[f'beta{l}'] = batchnorm_backward_alt(dout, bn_cache[l-1])
 
