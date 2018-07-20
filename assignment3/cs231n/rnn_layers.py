@@ -34,7 +34,8 @@ def rnn_step_forward(x, prev_h, Wx, Wh, b):
     # hidden state and any values you need for the backward pass in the next_h   #
     # and cache variables respectively.                                          #
     ##############################################################################
-    pass
+    next_h = np.tanh(np.dot(x, Wx) + np.dot(prev_h, Wh) + b)
+    cache = x,next_h,Wx,Wh,prev_h
     ##############################################################################
     #                               END OF YOUR CODE                             #
     ##############################################################################
@@ -63,7 +64,13 @@ def rnn_step_backward(dnext_h, cache):
     # HINT: For the tanh function, you can compute the local derivative in terms #
     # of the output value from tanh.                                             #
     ##############################################################################
-    pass
+    x,next_h,Wx,Wh,prev_h = cache
+    dtanh = (1-next_h*next_h) * dnext_h
+    db = np.sum(dtanh, axis=0)
+    dWh = np.dot(prev_h.T, dtanh)
+    dWx = np.dot(x.T, dtanh)
+    dprev_h = np.dot(dtanh, Wh.T)
+    dx = np.dot(dtanh,Wx.T)
     ##############################################################################
     #                               END OF YOUR CODE                             #
     ##############################################################################
@@ -94,7 +101,18 @@ def rnn_forward(x, h0, Wx, Wh, b):
     # input data. You should use the rnn_step_forward function that you defined  #
     # above. You can use a for loop to help compute the forward pass.            #
     ##############################################################################
-    pass
+    N,T = x.shape[0], x.shape[1]
+    H = Wx.shape[1]
+    h = np.zeros((N,T,H))
+    cache = []
+    prev_h = h0
+    for t in range(T):
+        xi = x[:,t,:]
+        next_h , cachei = rnn_step_forward(xi, prev_h, Wx, Wh, b)
+        h[:,t,:] = next_h
+        cache.append(cachei)
+        prev_h = next_h
+        
     ##############################################################################
     #                               END OF YOUR CODE                             #
     ##############################################################################
@@ -126,7 +144,7 @@ def rnn_backward(dh, cache):
     # sequence of data. You should use the rnn_step_backward function that you   #
     # defined above. You can use a for loop to help compute the backward pass.   #
     ##############################################################################
-    pass
+    
     ##############################################################################
     #                               END OF YOUR CODE                             #
     ##############################################################################
