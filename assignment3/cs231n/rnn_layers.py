@@ -144,7 +144,25 @@ def rnn_backward(dh, cache):
     # sequence of data. You should use the rnn_step_backward function that you   #
     # defined above. You can use a for loop to help compute the backward pass.   #
     ##############################################################################
+    N, T, H = dh.shape
+    D = cache[0][0].shape[1]
+    dx = np.zeros((N,T,D))
+    dh0 = np.zeros((N, H))
+    dWx = np.zeros((D, H))
+    dWh = np.zeros((H, H))
+    db = np.zeros((H,))
+    dhi = np.zeros((N,H))
+    for t in reversed(range(T)):
+        dht = dhi + dh[:,t,:]
+        dxi, dhi, dWxi, dWhi, dbi = rnn_step_backward(dht, cache[t])
+        dx[:, t, :] = dxi
+        dWx += dWxi
+        dWh += dWhi
+        db += dbi
+        
     
+    dh0 = dhi
+
     ##############################################################################
     #                               END OF YOUR CODE                             #
     ##############################################################################
@@ -172,7 +190,8 @@ def word_embedding_forward(x, W):
     #                                                                            #
     # HINT: This can be done in one line using NumPy's array indexing.           #
     ##############################################################################
-    pass
+    out = W[x]
+    cache = x,W
     ##############################################################################
     #                               END OF YOUR CODE                             #
     ##############################################################################
@@ -201,7 +220,9 @@ def word_embedding_backward(dout, cache):
     # Note that words can appear more than once in a sequence.                   #
     # HINT: Look up the function np.add.at                                       #
     ##############################################################################
-    pass
+    x, W = cache
+    dW = np.zeros(W.shape)
+    np.add.at(dW, x[:], dout[:])
     ##############################################################################
     #                               END OF YOUR CODE                             #
     ##############################################################################
